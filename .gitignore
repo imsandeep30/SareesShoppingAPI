@@ -1,0 +1,13 @@
+# Visual Studio
+.vs/
+
+# Build folders
+bin/
+obj/
+
+# SQLite DB
+*.db
+
+# User-specific
+*.user
+*.suo
