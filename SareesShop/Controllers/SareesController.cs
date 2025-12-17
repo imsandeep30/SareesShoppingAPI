@@ -54,8 +54,10 @@ namespace SareesShop.Controllers
                 Console.WriteLine(item.SareeName);
             }
 
+            //var query = _context.Sarees.AsQueryable();
+
             if (!string.IsNullOrEmpty(search))
-                query = query.Where(s => s.SareeName.Contains(search));
+                query = query.Where(s => EF.Functions.ILike(s.SareeName, $"%{search}%")); // case-insensitive for Postgres
 
             var result = await query.ToListAsync();
             return Ok(result);
