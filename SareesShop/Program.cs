@@ -15,6 +15,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+    Console.WriteLine("DATABASE_URL: " + databaseUrl);
 
     if (!string.IsNullOrEmpty(databaseUrl))
     {

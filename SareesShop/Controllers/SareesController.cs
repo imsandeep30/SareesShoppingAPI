@@ -48,6 +48,11 @@ namespace SareesShop.Controllers
         public async Task<IActionResult> Search([FromQuery] string? search)
         {
             var query = _context.Sarees.AsQueryable();
+            var ans=_context.Sarees.ToList();
+            foreach(var item in ans)
+            {
+                Console.WriteLine(item.SareeName);
+            }
 
             if (!string.IsNullOrEmpty(search))
                 query = query.Where(s => s.SareeName.Contains(search));
