@@ -18,19 +18,28 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
     if (!string.IsNullOrEmpty(databaseUrl))
     {
-        // ===== RENDER =====
-        // Use DATABASE_URL directly, replacing scheme
-        var connectionString = databaseUrl.Replace("postgres://", "postgresql://");
+        // Parse DATABASE_URL safely
+        var uri = new Uri(databaseUrl);
+        var userInfo = uri.UserInfo.Split(':');
+        var host = uri.Host;
+        var port = uri.Port == -1 ? 5432 : uri.Port; // default port
+        var dbName = uri.AbsolutePath.TrimStart('/');
+        var username = userInfo[0];
+        var password = userInfo[1];
+
+        var connectionString = $"Host={host};Port={port};Database={dbName};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true";
+
         options.UseNpgsql(connectionString);
     }
     else
     {
-        // ===== LOCAL =====
+        // Local database
         options.UseNpgsql(
             builder.Configuration.GetConnectionString("DefaultConnection")
         );
     }
 });
+
 
 // Cloudinary
 builder.Services.AddScoped<CloudnaryService>();
