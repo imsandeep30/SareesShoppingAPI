@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SareesShop.Data;
-using SareesShop.Data;
 using SareesShop.Models;
 using SareesShop.Services;
 namespace SareesShop.Controllers

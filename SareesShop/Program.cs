@@ -1,47 +1,41 @@
 using Microsoft.EntityFrameworkCore;
 using SareesShop.Data;
 using SareesShop.Services;
-using Npgsql.EntityFrameworkCore.PostgreSQL; // Add this using directive
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container
+// Controllers
 builder.Services.AddControllers();
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// DbContext (PostgreSQL)
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-                       ?? Environment.GetEnvironmentVariable("DATABASE_URL");
-
+// PostgreSQL DbContext (LOCAL + RENDER)
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    // If DATABASE_URL exists (Render), convert it
-    if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DATABASE_URL")))
+    var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+
+    if (!string.IsNullOrEmpty(databaseUrl))
     {
-        var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL")!;
-        var databaseUri = new Uri(databaseUrl);
-
-        var userInfo = databaseUri.UserInfo.Split(':');
-        var pgConnectionString = $"Host={databaseUri.Host};Port={databaseUri.Port};Database={databaseUri.AbsolutePath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true";
-
-        options.UseNpgsql(pgConnectionString);
+        // ===== RENDER =====
+        // Use DATABASE_URL directly, replacing scheme
+        var connectionString = databaseUrl.Replace("postgres://", "postgresql://");
+        options.UseNpgsql(connectionString);
     }
     else
     {
-        // fallback to appsettings.json
-        options.UseNpgsql(connectionString);
+        // ===== LOCAL =====
+        options.UseNpgsql(
+            builder.Configuration.GetConnectionString("DefaultConnection")
+        );
     }
 });
 
-
-
-// Cloudinary Service
+// Cloudinary
 builder.Services.AddScoped<CloudnaryService>();
 
-// CORS (for frontend React)
+// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -52,14 +46,14 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Automatically apply migrations
+// Apply migrations automatically
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate(); // Ensures tables are created if missing
+    db.Database.Migrate();
 }
 
-// Use Swagger only in development
+// Swagger only in Development
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -67,9 +61,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
-
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();
